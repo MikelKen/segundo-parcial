@@ -67,32 +67,39 @@ export default function DesignerWorkspace() {
   const addToHistory = useCallback(
     (newElements: DesignElement[]) => {
       setHistory((prevHistory) => {
-        const screenHistory = prevHistory[currentScreenId] || [[]]
-        const screenHistoryIndex = historyIndex[currentScreenId] || 0
+        const currentHistory = prevHistory[currentScreenId] || [[]]
+        const currentIndex = historyIndex[currentScreenId] || 0
 
         // Remove any future history if we're not at the end
-        const newScreenHistory = screenHistory.slice(0, screenHistoryIndex + 1)
-        newScreenHistory.push([...newElements])
+        const newHistory = currentHistory.slice(0, currentIndex + 1)
+
+        // Add the new state
+        newHistory.push([...newElements])
 
         // Limit history to prevent memory issues (keep last 50 states)
-        if (newScreenHistory.length > 50) {
-          newScreenHistory.shift()
-          setHistoryIndex((prevIndices) => ({
-            ...prevIndices,
-            [currentScreenId]: Math.max(0, (prevIndices[currentScreenId] || 0) - 1),
-          }))
+        if (newHistory.length > 50) {
+          newHistory.shift()
+          return {
+            ...prevHistory,
+            [currentScreenId]: newHistory,
+          }
         }
 
         return {
           ...prevHistory,
-          [currentScreenId]: newScreenHistory,
+          [currentScreenId]: newHistory,
         }
       })
 
-      setHistoryIndex((prevIndices) => ({
-        ...prevIndices,
-        [currentScreenId]: Math.min(49, (prevIndices[currentScreenId] || 0) + 1),
-      }))
+      setHistoryIndex((prevIndices) => {
+        const currentIndex = prevIndices[currentScreenId] || 0
+        const newIndex = Math.min(49, currentIndex + 1)
+
+        return {
+          ...prevIndices,
+          [currentScreenId]: newIndex,
+        }
+      })
     },
     [currentScreenId, historyIndex],
   )
@@ -100,6 +107,8 @@ export default function DesignerWorkspace() {
   // Add element to the canvas
   const addElement = useCallback(
     (type: ComponentType, x: number, y: number) => {
+      console.log("Adding element:", type, "at", x, y)
+
       const newElement: DesignElement = {
         id: `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type,
@@ -111,29 +120,50 @@ export default function DesignerWorkspace() {
         children: [],
       }
 
-      const currentElements = getCurrentScreenElements()
-      const newElements = [...currentElements, newElement]
+      console.log("New element created:", newElement)
 
-      // Update elements immediately
-      updateCurrentScreenElements(newElements)
+      // Get current elements and add the new one
+      setScreens((prevScreens) => {
+        return prevScreens.map((screen) => {
+          if (screen.id === currentScreenId) {
+            const updatedElements = [...screen.elements, newElement]
+            console.log("Updated elements for screen:", updatedElements)
+
+            // Add to history
+            setTimeout(() => {
+              addToHistory(updatedElements)
+            }, 0)
+
+            return { ...screen, elements: updatedElements }
+          }
+          return screen
+        })
+      })
 
       // Set the new element as selected
       setSelectedElement(newElement)
-
-      // Add to history without setTimeout to avoid race conditions
-      addToHistory(newElements)
     },
-    [addToHistory, getCurrentScreenElements, updateCurrentScreenElements],
+    [currentScreenId, addToHistory],
   )
 
   // Update element properties
   const updateElement = useCallback(
     (id: string, updates: Partial<DesignElement>) => {
-      const currentElements = getCurrentScreenElements()
-      const newElements = currentElements.map((el) => (el.id === id ? { ...el, ...updates } : el))
+      setScreens((prevScreens) => {
+        return prevScreens.map((screen) => {
+          if (screen.id === currentScreenId) {
+            const updatedElements = screen.elements.map((el) => (el.id === id ? { ...el, ...updates } : el))
 
-      // Update elements immediately
-      updateCurrentScreenElements(newElements)
+            // Add to history
+            setTimeout(() => {
+              addToHistory(updatedElements)
+            }, 0)
+
+            return { ...screen, elements: updatedElements }
+          }
+          return screen
+        })
+      })
 
       // Update selected element if it's the one being updated
       setSelectedElement((prevSelected) => {
@@ -142,21 +172,28 @@ export default function DesignerWorkspace() {
         }
         return prevSelected
       })
-
-      // Add to history without setTimeout
-      addToHistory(newElements)
     },
-    [addToHistory, getCurrentScreenElements, updateCurrentScreenElements],
+    [currentScreenId, addToHistory],
   )
 
   // Remove element from canvas
   const removeElement = useCallback(
     (id: string) => {
-      const currentElements = getCurrentScreenElements()
-      const newElements = currentElements.filter((el) => el.id !== id)
+      setScreens((prevScreens) => {
+        return prevScreens.map((screen) => {
+          if (screen.id === currentScreenId) {
+            const updatedElements = screen.elements.filter((el) => el.id !== id)
 
-      // Update elements immediately
-      updateCurrentScreenElements(newElements)
+            // Add to history
+            setTimeout(() => {
+              addToHistory(updatedElements)
+            }, 0)
+
+            return { ...screen, elements: updatedElements }
+          }
+          return screen
+        })
+      })
 
       // Clear selection if the removed element was selected
       setSelectedElement((prevSelected) => {
@@ -165,11 +202,8 @@ export default function DesignerWorkspace() {
         }
         return prevSelected
       })
-
-      // Add to history without setTimeout
-      addToHistory(newElements)
     },
-    [addToHistory, getCurrentScreenElements, updateCurrentScreenElements],
+    [currentScreenId, addToHistory],
   )
 
   // Undo action
@@ -179,16 +213,22 @@ export default function DesignerWorkspace() {
 
     if (screenHistoryIndex > 0) {
       const newIndex = screenHistoryIndex - 1
+      const elementsToRestore = screenHistory[newIndex]
 
       setHistoryIndex((prevIndices) => ({
         ...prevIndices,
         [currentScreenId]: newIndex,
       }))
 
-      updateCurrentScreenElements([...screenHistory[newIndex]])
+      setScreens((prevScreens) =>
+        prevScreens.map((screen) =>
+          screen.id === currentScreenId ? { ...screen, elements: [...elementsToRestore] } : screen,
+        ),
+      )
+
       setSelectedElement(null)
     }
-  }, [history, historyIndex, currentScreenId, updateCurrentScreenElements])
+  }, [history, historyIndex, currentScreenId])
 
   // Redo action
   const redo = useCallback(() => {
@@ -197,16 +237,22 @@ export default function DesignerWorkspace() {
 
     if (screenHistoryIndex < screenHistory.length - 1) {
       const newIndex = screenHistoryIndex + 1
+      const elementsToRestore = screenHistory[newIndex]
 
       setHistoryIndex((prevIndices) => ({
         ...prevIndices,
         [currentScreenId]: newIndex,
       }))
 
-      updateCurrentScreenElements([...screenHistory[newIndex]])
+      setScreens((prevScreens) =>
+        prevScreens.map((screen) =>
+          screen.id === currentScreenId ? { ...screen, elements: [...elementsToRestore] } : screen,
+        ),
+      )
+
       setSelectedElement(null)
     }
-  }, [history, historyIndex, currentScreenId, updateCurrentScreenElements])
+  }, [history, historyIndex, currentScreenId])
 
   // Generate Flutter code
   const generateCode = useCallback(() => {
@@ -236,11 +282,12 @@ export default function DesignerWorkspace() {
 
   // Clear all elements
   const clearCanvas = useCallback(() => {
-    const emptyElements: DesignElement[] = []
-    updateCurrentScreenElements(emptyElements)
+    setScreens((prevScreens) =>
+      prevScreens.map((screen) => (screen.id === currentScreenId ? { ...screen, elements: [] } : screen)),
+    )
     setSelectedElement(null)
-    addToHistory(emptyElements)
-  }, [addToHistory, updateCurrentScreenElements])
+    addToHistory([])
+  }, [currentScreenId, addToHistory])
 
   // Screen management functions
   const addScreen = useCallback((name: string) => {
@@ -604,6 +651,11 @@ export default function DesignerWorkspace() {
   useEffect(() => {
     setSelectedElement(null)
   }, [currentScreenId])
+
+  // Debug: Log current elements
+  useEffect(() => {
+    console.log("Current screen elements:", getCurrentScreenElements())
+  }, [getCurrentScreenElements])
 
   return (
     <DndProvider backend={HTML5Backend}>
