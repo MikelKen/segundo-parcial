@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import ComponentsSidebar from "./components-sidebar"
@@ -17,6 +17,9 @@ export default function DesignerWorkspace() {
   // Screens state
   const [screens, setScreens] = useState<Screen[]>([{ id: "screen-1", name: "Home", elements: [] }])
   const [currentScreenId, setCurrentScreenId] = useState("screen-1")
+
+  // Ref para rastrear el ID de pantalla actual
+  const currentScreenIdRef = useRef(currentScreenId)
 
   // Elements state
   const [selectedElement, setSelectedElement] = useState<DesignElement | null>(null)
@@ -47,28 +50,48 @@ export default function DesignerWorkspace() {
     },
   ])
 
+  // Actualizar la ref cuando cambia currentScreenId
+  useEffect(() => {
+    currentScreenIdRef.current = currentScreenId
+    console.log("🔄 Pantalla actual cambiada a:", currentScreenId)
+  }, [currentScreenId])
+
   // Get current screen elements
   const getCurrentScreenElements = useCallback(() => {
-    const currentScreen = screens.find((s) => s.id === currentScreenId)
-    return currentScreen ? currentScreen.elements : []
-  }, [screens, currentScreenId])
+    const screenId = currentScreenIdRef.current
+    const currentScreen = screens.find((s) => s.id === screenId)
+    if (!currentScreen) {
+      console.error("❌ No se encontró la pantalla actual:", screenId)
+      return []
+    }
+    return currentScreen.elements
+  }, [screens])
 
   // Update current screen elements
-  const updateCurrentScreenElements = useCallback(
-    (elements: DesignElement[]) => {
-      setScreens((prevScreens) =>
-        prevScreens.map((screen) => (screen.id === currentScreenId ? { ...screen, elements } : screen)),
-      )
-    },
-    [currentScreenId],
-  )
+  const updateCurrentScreenElements = useCallback((elements: DesignElement[]) => {
+    const screenId = currentScreenIdRef.current
+    console.log("📝 Actualizando elementos para pantalla:", screenId, "Elementos:", elements.length)
+
+    setScreens((prevScreens) => {
+      const updatedScreens = prevScreens.map((screen) => {
+        if (screen.id === screenId) {
+          return { ...screen, elements }
+        }
+        return screen
+      })
+      return updatedScreens
+    })
+  }, [])
 
   // Add current state to history
   const addToHistory = useCallback(
     (newElements: DesignElement[]) => {
+      const screenId = currentScreenIdRef.current
+      console.log("📚 Agregando al historial para pantalla:", screenId, "Elementos:", newElements.length)
+
       setHistory((prevHistory) => {
-        const currentHistory = prevHistory[currentScreenId] || [[]]
-        const currentIndex = historyIndex[currentScreenId] || 0
+        const currentHistory = prevHistory[screenId] || [[]]
+        const currentIndex = historyIndex[screenId] || 0
 
         // Remove any future history if we're not at the end
         const newHistory = currentHistory.slice(0, currentIndex + 1)
@@ -81,34 +104,38 @@ export default function DesignerWorkspace() {
           newHistory.shift()
           return {
             ...prevHistory,
-            [currentScreenId]: newHistory,
+            [screenId]: newHistory,
           }
         }
 
         return {
           ...prevHistory,
-          [currentScreenId]: newHistory,
+          [screenId]: newHistory,
         }
       })
 
       setHistoryIndex((prevIndices) => {
-        const currentIndex = prevIndices[currentScreenId] || 0
+        const currentIndex = prevIndices[screenId] || 0
         const newIndex = Math.min(49, currentIndex + 1)
 
         return {
           ...prevIndices,
-          [currentScreenId]: newIndex,
+          [screenId]: newIndex,
         }
       })
     },
-    [currentScreenId, historyIndex],
+    [historyIndex],
   )
 
   // Add element to the canvas
   const addElement = useCallback(
     (type: ComponentType, x: number, y: number) => {
-      console.log("Adding element:", type, "at", x, y)
+      const screenId = currentScreenIdRef.current
+      console.log("➕ AGREGANDO ELEMENTO")
+      console.log("Tipo:", type, "Posición:", x, y)
+      console.log("Pantalla actual:", screenId)
 
+      // Crear el nuevo elemento
       const newElement: DesignElement = {
         id: `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type,
@@ -120,49 +147,83 @@ export default function DesignerWorkspace() {
         children: [],
       }
 
-      console.log("New element created:", newElement)
+      console.log("Nuevo elemento creado:", newElement.id)
 
-      // Get current elements and add the new one
+      // Actualizar el estado de las pantallas
       setScreens((prevScreens) => {
-        return prevScreens.map((screen) => {
-          if (screen.id === currentScreenId) {
-            const updatedElements = [...screen.elements, newElement]
-            console.log("Updated elements for screen:", updatedElements)
+        // Encontrar la pantalla actual
+        const currentScreenIndex = prevScreens.findIndex((s) => s.id === screenId)
 
-            // Add to history
-            setTimeout(() => {
-              addToHistory(updatedElements)
-            }, 0)
+        if (currentScreenIndex === -1) {
+          console.error("❌ No se encontró la pantalla:", screenId)
+          return prevScreens
+        }
 
-            return { ...screen, elements: updatedElements }
-          }
-          return screen
-        })
+        // Crear una copia profunda de las pantallas
+        const updatedScreens = [...prevScreens]
+
+        // Obtener la pantalla actual
+        const currentScreen = { ...updatedScreens[currentScreenIndex] }
+
+        // Agregar el nuevo elemento a la pantalla actual
+        const updatedElements = [...currentScreen.elements, newElement]
+        currentScreen.elements = updatedElements
+
+        // Actualizar la pantalla en el array
+        updatedScreens[currentScreenIndex] = currentScreen
+
+        console.log("✅ Pantalla actualizada:", currentScreen.id, "Elementos:", updatedElements.length)
+
+        // Agregar al historial
+        setTimeout(() => {
+          addToHistory(updatedElements)
+        }, 0)
+
+        return updatedScreens
       })
 
-      // Set the new element as selected
+      // Seleccionar el nuevo elemento
       setSelectedElement(newElement)
+
+      console.log("➕ FIN AGREGAR ELEMENTO")
     },
-    [currentScreenId, addToHistory],
+    [addToHistory],
   )
 
   // Update element properties
   const updateElement = useCallback(
     (id: string, updates: Partial<DesignElement>) => {
+      const screenId = currentScreenIdRef.current
+
       setScreens((prevScreens) => {
-        return prevScreens.map((screen) => {
-          if (screen.id === currentScreenId) {
-            const updatedElements = screen.elements.map((el) => (el.id === id ? { ...el, ...updates } : el))
+        // Encontrar la pantalla actual
+        const currentScreenIndex = prevScreens.findIndex((s) => s.id === screenId)
 
-            // Add to history
-            setTimeout(() => {
-              addToHistory(updatedElements)
-            }, 0)
+        if (currentScreenIndex === -1) {
+          console.error("❌ No se encontró la pantalla:", screenId)
+          return prevScreens
+        }
 
-            return { ...screen, elements: updatedElements }
-          }
-          return screen
-        })
+        // Crear una copia profunda de las pantallas
+        const updatedScreens = [...prevScreens]
+
+        // Obtener la pantalla actual
+        const currentScreen = { ...updatedScreens[currentScreenIndex] }
+
+        // Actualizar el elemento en la pantalla actual
+        const updatedElements = currentScreen.elements.map((el) => (el.id === id ? { ...el, ...updates } : el))
+
+        currentScreen.elements = updatedElements
+
+        // Actualizar la pantalla en el array
+        updatedScreens[currentScreenIndex] = currentScreen
+
+        // Agregar al historial
+        setTimeout(() => {
+          addToHistory(updatedElements)
+        }, 0)
+
+        return updatedScreens
       })
 
       // Update selected element if it's the one being updated
@@ -173,26 +234,43 @@ export default function DesignerWorkspace() {
         return prevSelected
       })
     },
-    [currentScreenId, addToHistory],
+    [addToHistory],
   )
 
   // Remove element from canvas
   const removeElement = useCallback(
     (id: string) => {
+      const screenId = currentScreenIdRef.current
+
       setScreens((prevScreens) => {
-        return prevScreens.map((screen) => {
-          if (screen.id === currentScreenId) {
-            const updatedElements = screen.elements.filter((el) => el.id !== id)
+        // Encontrar la pantalla actual
+        const currentScreenIndex = prevScreens.findIndex((s) => s.id === screenId)
 
-            // Add to history
-            setTimeout(() => {
-              addToHistory(updatedElements)
-            }, 0)
+        if (currentScreenIndex === -1) {
+          console.error("❌ No se encontró la pantalla:", screenId)
+          return prevScreens
+        }
 
-            return { ...screen, elements: updatedElements }
-          }
-          return screen
-        })
+        // Crear una copia profunda de las pantallas
+        const updatedScreens = [...prevScreens]
+
+        // Obtener la pantalla actual
+        const currentScreen = { ...updatedScreens[currentScreenIndex] }
+
+        // Eliminar el elemento de la pantalla actual
+        const updatedElements = currentScreen.elements.filter((el) => el.id !== id)
+
+        currentScreen.elements = updatedElements
+
+        // Actualizar la pantalla en el array
+        updatedScreens[currentScreenIndex] = currentScreen
+
+        // Agregar al historial
+        setTimeout(() => {
+          addToHistory(updatedElements)
+        }, 0)
+
+        return updatedScreens
       })
 
       // Clear selection if the removed element was selected
@@ -203,13 +281,14 @@ export default function DesignerWorkspace() {
         return prevSelected
       })
     },
-    [currentScreenId, addToHistory],
+    [addToHistory],
   )
 
   // Undo action
   const undo = useCallback(() => {
-    const screenHistoryIndex = historyIndex[currentScreenId] || 0
-    const screenHistory = history[currentScreenId] || [[]]
+    const screenId = currentScreenIdRef.current
+    const screenHistoryIndex = historyIndex[screenId] || 0
+    const screenHistory = history[screenId] || [[]]
 
     if (screenHistoryIndex > 0) {
       const newIndex = screenHistoryIndex - 1
@@ -217,23 +296,42 @@ export default function DesignerWorkspace() {
 
       setHistoryIndex((prevIndices) => ({
         ...prevIndices,
-        [currentScreenId]: newIndex,
+        [screenId]: newIndex,
       }))
 
-      setScreens((prevScreens) =>
-        prevScreens.map((screen) =>
-          screen.id === currentScreenId ? { ...screen, elements: [...elementsToRestore] } : screen,
-        ),
-      )
+      setScreens((prevScreens) => {
+        // Encontrar la pantalla actual
+        const currentScreenIndex = prevScreens.findIndex((s) => s.id === screenId)
+
+        if (currentScreenIndex === -1) {
+          console.error("❌ No se encontró la pantalla:", screenId)
+          return prevScreens
+        }
+
+        // Crear una copia profunda de las pantallas
+        const updatedScreens = [...prevScreens]
+
+        // Obtener la pantalla actual
+        const currentScreen = { ...updatedScreens[currentScreenIndex] }
+
+        // Restaurar los elementos
+        currentScreen.elements = [...elementsToRestore]
+
+        // Actualizar la pantalla en el array
+        updatedScreens[currentScreenIndex] = currentScreen
+
+        return updatedScreens
+      })
 
       setSelectedElement(null)
     }
-  }, [history, historyIndex, currentScreenId])
+  }, [history, historyIndex])
 
   // Redo action
   const redo = useCallback(() => {
-    const screenHistoryIndex = historyIndex[currentScreenId] || 0
-    const screenHistory = history[currentScreenId] || [[]]
+    const screenId = currentScreenIdRef.current
+    const screenHistoryIndex = historyIndex[screenId] || 0
+    const screenHistory = history[screenId] || [[]]
 
     if (screenHistoryIndex < screenHistory.length - 1) {
       const newIndex = screenHistoryIndex + 1
@@ -241,18 +339,36 @@ export default function DesignerWorkspace() {
 
       setHistoryIndex((prevIndices) => ({
         ...prevIndices,
-        [currentScreenId]: newIndex,
+        [screenId]: newIndex,
       }))
 
-      setScreens((prevScreens) =>
-        prevScreens.map((screen) =>
-          screen.id === currentScreenId ? { ...screen, elements: [...elementsToRestore] } : screen,
-        ),
-      )
+      setScreens((prevScreens) => {
+        // Encontrar la pantalla actual
+        const currentScreenIndex = prevScreens.findIndex((s) => s.id === screenId)
+
+        if (currentScreenIndex === -1) {
+          console.error("❌ No se encontró la pantalla:", screenId)
+          return prevScreens
+        }
+
+        // Crear una copia profunda de las pantallas
+        const updatedScreens = [...prevScreens]
+
+        // Obtener la pantalla actual
+        const currentScreen = { ...updatedScreens[currentScreenIndex] }
+
+        // Restaurar los elementos
+        currentScreen.elements = [...elementsToRestore]
+
+        // Actualizar la pantalla en el array
+        updatedScreens[currentScreenIndex] = currentScreen
+
+        return updatedScreens
+      })
 
       setSelectedElement(null)
     }
-  }, [history, historyIndex, currentScreenId])
+  }, [history, historyIndex])
 
   // Generate Flutter code
   const generateCode = useCallback(() => {
@@ -282,30 +398,61 @@ export default function DesignerWorkspace() {
 
   // Clear all elements
   const clearCanvas = useCallback(() => {
-    setScreens((prevScreens) =>
-      prevScreens.map((screen) => (screen.id === currentScreenId ? { ...screen, elements: [] } : screen)),
-    )
+    const screenId = currentScreenIdRef.current
+
+    setScreens((prevScreens) => {
+      // Encontrar la pantalla actual
+      const currentScreenIndex = prevScreens.findIndex((s) => s.id === screenId)
+
+      if (currentScreenIndex === -1) {
+        console.error("❌ No se encontró la pantalla:", screenId)
+        return prevScreens
+      }
+
+      // Crear una copia profunda de las pantallas
+      const updatedScreens = [...prevScreens]
+
+      // Obtener la pantalla actual
+      const currentScreen = { ...updatedScreens[currentScreenIndex] }
+
+      // Limpiar los elementos
+      currentScreen.elements = []
+
+      // Actualizar la pantalla en el array
+      updatedScreens[currentScreenIndex] = currentScreen
+
+      return updatedScreens
+    })
+
     setSelectedElement(null)
     addToHistory([])
-  }, [currentScreenId, addToHistory])
+  }, [addToHistory])
 
   // Screen management functions
   const addScreen = useCallback((name: string) => {
     const newScreenId = `screen-${Date.now()}`
+    console.log("🆕 Creando nueva pantalla:", newScreenId, "Nombre:", name)
 
+    // Primero agregar la nueva pantalla
     setScreens((prevScreens) => [...prevScreens, { id: newScreenId, name, elements: [] }])
 
+    // Inicializar el historial para la nueva pantalla
     setHistory((prevHistory) => ({
       ...prevHistory,
       [newScreenId]: [[]],
     }))
 
+    // Inicializar el índice del historial para la nueva pantalla
     setHistoryIndex((prevIndices) => ({
       ...prevIndices,
       [newScreenId]: 0,
     }))
 
+    // Cambiar a la nueva pantalla (esto actualizará currentScreenIdRef en el useEffect)
     setCurrentScreenId(newScreenId)
+
+    // Limpiar la selección
+    setSelectedElement(null)
   }, [])
 
   const renameScreen = useCallback((id: string, name: string) => {
@@ -344,6 +491,7 @@ export default function DesignerWorkspace() {
   const navigateToScreen = useCallback(
     (screenId: string) => {
       if (screens.some((screen) => screen.id === screenId)) {
+        console.log("🧭 Navegando a pantalla:", screenId)
         setCurrentScreenId(screenId)
       }
     },
@@ -652,10 +800,47 @@ export default function DesignerWorkspace() {
     setSelectedElement(null)
   }, [currentScreenId])
 
-  // Debug: Log current elements
+  // Asegurar que el historial existe para la pantalla actual
   useEffect(() => {
-    console.log("Current screen elements:", getCurrentScreenElements())
-  }, [getCurrentScreenElements])
+    const screenId = currentScreenId
+
+    if (!history[screenId]) {
+      console.log("📝 Inicializando historial para pantalla:", screenId)
+      setHistory((prevHistory) => ({
+        ...prevHistory,
+        [screenId]: [[]],
+      }))
+    }
+
+    if (historyIndex[screenId] === undefined) {
+      console.log("📝 Inicializando índice de historial para pantalla:", screenId)
+      setHistoryIndex((prevIndices) => ({
+        ...prevIndices,
+        [screenId]: 0,
+      }))
+    }
+
+    // Mostrar información de depuración
+    const currentScreen = screens.find((s) => s.id === screenId)
+    if (currentScreen) {
+      console.log(
+        "📊 Pantalla actual:",
+        screenId,
+        "Nombre:",
+        currentScreen.name,
+        "Elementos:",
+        currentScreen.elements.length,
+      )
+    }
+  }, [currentScreenId, history, historyIndex, screens])
+
+  // Mostrar información de depuración cuando cambian las pantallas
+  useEffect(() => {
+    console.log("📊 ESTADO DE PANTALLAS:")
+    screens.forEach((screen) => {
+      console.log(`- ${screen.id} (${screen.name}): ${screen.elements.length} elementos`)
+    })
+  }, [screens])
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -726,7 +911,7 @@ export default function DesignerWorkspace() {
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
               </svg>
             </button>
-            <span className="text-sm text-gray-500">Elements: {getCurrentScreenElements().length}</span>
+            <span className="text-sm text-gray-500">Elements: {currentScreen ? currentScreen.elements.length : 0}</span>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -809,7 +994,7 @@ export default function DesignerWorkspace() {
           <div className="flex flex-1 flex-col">
             {showPreview ? (
               <PreviewPanel
-                elements={getCurrentScreenElements()}
+                elements={currentScreen ? currentScreen.elements : []}
                 device={previewDevice}
                 isDarkMode={isDarkMode}
                 onDeviceChange={(device) => {
@@ -818,12 +1003,12 @@ export default function DesignerWorkspace() {
                 }}
               />
             ) : showExport ? (
-              <ExportPanel code={generateCode()} elements={getCurrentScreenElements()} />
+              <ExportPanel code={generateCode()} elements={currentScreen ? currentScreen.elements : []} />
             ) : showChat ? (
               <ChatPanel messages={chatMessages} onSendMessage={sendChatMessage} />
             ) : (
               <DesignCanvas
-                elements={getCurrentScreenElements()}
+                elements={currentScreen ? currentScreen.elements : []}
                 selectedElement={selectedElement}
                 onSelectElement={setSelectedElement}
                 onUpdateElement={updateElement}
