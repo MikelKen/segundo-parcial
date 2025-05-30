@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useDrag } from "react-dnd"
-import type { ComponentType } from "@/lib/types"
+import { useDrag } from "react-dnd";
+import type { ComponentType } from "@/lib/types";
 
 interface ComponentsSidebarProps {
-  onAddElement: (type: ComponentType, x: number, y: number) => void
+  onAddElement: (type: ComponentType, x: number, y: number) => void;
 }
 
 interface DraggableComponentProps {
-  type: ComponentType
-  label: string
-  icon: React.ReactNode
+  type: ComponentType;
+  label: string;
+  icon: React.ReactNode;
 }
 
 export default function ComponentsSidebar({ onAddElement }: ComponentsSidebarProps) {
@@ -48,7 +48,6 @@ export default function ComponentsSidebar({ onAddElement }: ComponentsSidebarPro
       title: "Components",
       components: [
         { type: "card", label: "Card", icon: <CardIcon /> },
-        { type: "list", label: "List", icon: <ListIcon /> },
         { type: "dynamicTable", label: "Table", icon: <TableIcon /> },
         { type: "switch", label: "Switch", icon: <SwitchIcon /> },
         { type: "checkbox", label: "Checkbox", icon: <CheckboxIcon /> },
@@ -62,7 +61,7 @@ export default function ComponentsSidebar({ onAddElement }: ComponentsSidebarPro
         { type: "chatMessage", label: "Chat Message", icon: <ChatMessageIcon /> },
       ],
     },
-  ]
+  ];
 
   return (
     <div className="w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
@@ -86,7 +85,7 @@ export default function ComponentsSidebar({ onAddElement }: ComponentsSidebarPro
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function DraggableComponent({ type, label, icon }: DraggableComponentProps) {
@@ -96,7 +95,7 @@ function DraggableComponent({ type, label, icon }: DraggableComponentProps) {
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-  }))
+  }));
 
   return (
     <div
@@ -108,7 +107,7 @@ function DraggableComponent({ type, label, icon }: DraggableComponentProps) {
       <div className="mb-1 text-gray-600">{icon}</div>
       <span className="text-xs">{label}</span>
     </div>
-  )
+  );
 }
 
 // Component Icons
@@ -117,7 +116,7 @@ function ButtonIcon() {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="8" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function TextFieldIcon() {
@@ -126,7 +125,7 @@ function TextFieldIcon() {
       <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
       <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function CardIcon() {
@@ -135,7 +134,7 @@ function CardIcon() {
       <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
       <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function ListIcon() {
@@ -145,7 +144,7 @@ function ListIcon() {
       <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" />
       <line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function IconComponentIcon() {
@@ -159,7 +158,7 @@ function IconComponentIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }
 
 function ContainerIcon() {
@@ -167,7 +166,7 @@ function ContainerIcon() {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function RowIcon() {
@@ -177,7 +176,7 @@ function RowIcon() {
       <line x1="8" y1="8" x2="8" y2="16" stroke="currentColor" strokeWidth="2" />
       <line x1="16" y1="8" x2="16" y2="16" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function ColumnIcon() {
@@ -187,7 +186,7 @@ function ColumnIcon() {
       <line x1="3" y1="8" x2="21" y2="8" stroke="currentColor" strokeWidth="2" />
       <line x1="3" y1="16" x2="21" y2="16" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function StackIcon() {
@@ -196,7 +195,7 @@ function StackIcon() {
       <rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
       <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }
 
 function SwitchIcon() {
@@ -205,7 +204,7 @@ function SwitchIcon() {
       <rect x="3" y="9" width="18" height="6" rx="3" stroke="currentColor" strokeWidth="2" />
       <circle cx="16" cy="12" r="2" fill="currentColor" />
     </svg>
-  )
+  );
 }
 
 function CheckboxIcon() {
@@ -214,7 +213,7 @@ function CheckboxIcon() {
       <rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
       <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  )
+  );
 }
 
 function RadioIcon() {
@@ -223,7 +222,7 @@ function RadioIcon() {
       <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
       <circle cx="12" cy="12" r="4" fill="currentColor" />
     </svg>
-  )
+  );
 }
 
 function ChatInputIcon() {
@@ -232,7 +231,7 @@ function ChatInputIcon() {
       <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
       <path d="M18 12L22 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function ChatMessageIcon() {
@@ -246,7 +245,7 @@ function ChatMessageIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }
 
 function DropdownIcon() {
@@ -255,7 +254,7 @@ function DropdownIcon() {
       <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
       <path d="M7 10L12 14L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  )
+  );
 }
 
 function InputWithLabelIcon() {
@@ -264,7 +263,7 @@ function InputWithLabelIcon() {
       <rect x="3" y="9" width="18" height="9" rx="2" stroke="currentColor" strokeWidth="2" />
       <path d="M4 6h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function SwitchWithLabelIcon() {
@@ -274,7 +273,7 @@ function SwitchWithLabelIcon() {
       <circle cx="17" cy="12" r="2" fill="currentColor" />
       <path d="M4 12h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function RadioWithLabelIcon() {
@@ -284,7 +283,7 @@ function RadioWithLabelIcon() {
       <circle cx="16" cy="12" r="2" fill="currentColor" />
       <path d="M4 12h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function CheckboxWithLabelIcon() {
@@ -294,7 +293,7 @@ function CheckboxWithLabelIcon() {
       <path d="M15 12L17 14L21 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M3 12h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
 
 function TableIcon() {
@@ -307,5 +306,5 @@ function TableIcon() {
       <line x1="9" y1="4" x2="9" y2="20" stroke="currentColor" strokeWidth="2" />
       <line x1="15" y1="4" x2="15" y2="20" stroke="currentColor" strokeWidth="2" />
     </svg>
-  )
+  );
 }

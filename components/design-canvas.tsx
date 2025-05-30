@@ -1,56 +1,56 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useDrop } from "react-dnd"
-import type { DesignElement, DeviceType, Screen } from "@/lib/types"
-import CanvasElement from "./canvas-element"
+import type React from "react";
+import { useDrop } from "react-dnd";
+import type { ComponentType, DesignElement, DeviceType, Screen } from "@/lib/types";
+import CanvasElement from "./canvas-element";
 
 interface DesignCanvasProps {
-  elements: DesignElement[]
-  selectedElement: DesignElement | null
-  onSelectElement: (element: DesignElement | null) => void
-  onUpdateElement: (id: string, updates: Partial<DesignElement>) => void
-  onRemoveElement: (id: string) => void
-  isDarkMode: boolean
-  onAddElement: (type: string, x: number, y: number) => void
-  deviceType: DeviceType
-  onDeviceChange: (device: DeviceType) => void
-  currentScreen: Screen
-  onNavigate?: (screenId: string) => void
+  elements: DesignElement[];
+  selectedElement: DesignElement | null;
+  onSelectElement: (element: DesignElement | null) => void;
+  onUpdateElement: (id: string, updates: Partial<DesignElement>) => void;
+  onRemoveElement: (id: string) => void;
+  isDarkMode: boolean;
+  onAddElement: (type: ComponentType, x: number, y: number) => void;
+  deviceType: DeviceType;
+  onDeviceChange: (device: DeviceType) => void;
+  currentScreen: Screen;
+  onNavigate?: (screenId: string) => void;
 }
 
 export default function DesignCanvas(props: DesignCanvasProps) {
-  const { deviceType, onDeviceChange, currentScreen, onNavigate } = props
+  const { deviceType, onDeviceChange, currentScreen, onNavigate } = props;
   const { elements, selectedElement, onSelectElement, onUpdateElement, onRemoveElement, isDarkMode, onAddElement } =
-    props
+    props;
 
   const devices = [
     { id: "iphone13", label: "iPhone 13", width: 390, height: 844 },
     { id: "pixel6", label: "Pixel 6", width: 412, height: 915 },
     { id: "samsungs21", label: "Samsung S21", width: 360, height: 800 },
-  ]
+  ];
 
-  const currentDevice = devices.find((d) => d.id === deviceType) || devices[0]
+  const currentDevice = devices.find((d) => d.id === deviceType) || devices[0];
 
   const handleDrop = (item: { type: string }, monitor: any) => {
-    const offset = monitor.getClientOffset()
+    const offset = monitor.getClientOffset();
     if (offset && onAddElement) {
-      const phoneContainer = document.getElementById("phone-container")?.getBoundingClientRect()
-      const phoneScreen = document.getElementById("phone-screen")?.getBoundingClientRect()
+      const phoneContainer = document.getElementById("phone-container")?.getBoundingClientRect();
+      const phoneScreen = document.getElementById("phone-screen")?.getBoundingClientRect();
 
       if (phoneContainer && phoneScreen) {
         // Calculate position relative to the phone screen
-        const x = Math.round((offset.x - phoneScreen.left) / 20) * 20
-        const y = Math.round((offset.y - phoneScreen.top) / 20) * 20
+        const x = Math.round((offset.x - phoneScreen.left) / 20) * 20;
+        const y = Math.round((offset.y - phoneScreen.top) / 20) * 20;
 
         // Only add if within phone screen bounds
         if (x >= 0 && x <= phoneScreen.width && y >= 0 && y <= phoneScreen.height) {
-          onAddElement(item.type as any, x, y)
+          onAddElement(item.type as any, x, y);
         }
       }
     }
-    return undefined
-  }
+    return undefined;
+  };
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "component",
@@ -58,21 +58,21 @@ export default function DesignCanvas(props: DesignCanvasProps) {
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
-  }))
+  }));
 
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Only deselect if clicking directly on the canvas, not on an element
     if (e.target === e.currentTarget) {
-      onSelectElement(null)
+      onSelectElement(null);
     }
-  }
+  };
 
   // Handle button clicks for navigation
   const handleElementClick = (element: DesignElement) => {
     if (element.type === "button" && element.properties.navigateTo && onNavigate) {
-      onNavigate(element.properties.navigateTo)
+      onNavigate(element.properties.navigateTo);
     }
-  }
+  };
 
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-gray-100 p-4">
@@ -160,5 +160,5 @@ export default function DesignCanvas(props: DesignCanvasProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

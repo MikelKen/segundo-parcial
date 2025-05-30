@@ -1,80 +1,91 @@
-"use client"
+"use client";
 
-import type { DesignElement, TableColumn } from "./types"
+import type { DesignElement, TableColumn } from "./types";
 
 export function renderComponentPreview(element: DesignElement, isDarkMode: boolean) {
-  const { type, properties } = element
+  const { type, properties } = element;
 
   switch (type) {
     case "button":
-      return renderButton(properties, isDarkMode)
+      return renderButton(properties, isDarkMode);
     case "textField":
-      return renderTextField(properties, isDarkMode)
+      return renderTextField(properties, isDarkMode);
     case "card":
-      return renderCard(properties, isDarkMode)
+      return renderCard(properties, isDarkMode);
     case "list":
-      return renderList(properties, isDarkMode)
+      return renderList(properties, isDarkMode);
     case "icon":
-      return renderIcon(properties)
+      return renderIcon(properties);
     case "container":
-      return renderContainer(properties, isDarkMode)
+      return renderContainer(properties, isDarkMode);
     case "row":
-      return renderRow(properties, isDarkMode)
+      return renderRow(properties, isDarkMode);
     case "column":
-      return renderColumn(properties, isDarkMode)
+      return renderColumn(properties, isDarkMode);
     case "stack":
-      return renderStack(properties, isDarkMode)
+      return renderStack(properties, isDarkMode);
     case "switch":
-      return renderSwitch(properties)
+      return renderSwitch(properties);
     case "checkbox":
-      return renderCheckbox(properties)
+      return renderCheckbox(properties);
     case "radio":
-      return renderRadio(properties)
+      return renderRadio(properties);
     case "chatInput":
-      return renderChatInput(properties, isDarkMode)
+      return renderChatInput(properties, isDarkMode);
     case "chatMessage":
-      return renderChatMessage(properties, isDarkMode)
+      return renderChatMessage(properties, isDarkMode);
     case "dropdown":
-      return renderDropdown(properties, isDarkMode)
+      return renderDropdown(properties, isDarkMode);
     case "inputWithLabel":
-      return renderInputWithLabel(properties, isDarkMode)
+      return renderInputWithLabel(properties, isDarkMode);
     case "switchWithLabel":
-      return renderSwitchWithLabel(properties, isDarkMode)
+      return renderSwitchWithLabel(properties, isDarkMode);
     case "radioWithLabel":
-      return renderRadioWithLabel(properties, isDarkMode)
+      return renderRadioWithLabel(properties, isDarkMode);
     case "checkboxWithLabel":
-      return renderCheckboxWithLabel(properties, isDarkMode)
+      return renderCheckboxWithLabel(properties, isDarkMode);
     case "dynamicTable":
-      return renderDynamicTable(properties, isDarkMode)
+      return renderDynamicTable(properties, isDarkMode);
     default:
-      return <div className="h-full w-full bg-gray-200" />
+      return <div className="h-full w-full bg-gray-200" />;
   }
 }
 
 function renderButton(properties: Record<string, any>, isDarkMode: boolean) {
-  const { text, variant, rounded, color, textColor, padding, navigateTo } = properties
+  const { text, variant, rounded, color, padding, navigateTo } = properties;
 
-  let className = "flex items-center justify-center h-full w-full"
+  // Calcular color de texto automáticamente
+  const textColor = getContrastingTextColor(color);
+
+  let className = "flex items-center justify-center h-full w-full font-medium";
 
   if (variant === "primary") {
-    className += ` bg-[${color}] text-[${textColor}]`
+    className += ` text-white`;
   } else if (variant === "outline") {
-    className += ` border-2 border-[${color}] text-[${color}] bg-transparent`
+    className += ` border-2 bg-transparent`;
+    className += ` border-[${color}] text-[${color}]`;
   } else {
-    className += ` bg-gray-200 text-gray-800`
+    className += ` bg-gray-200 text-gray-800`;
   }
 
   if (rounded) {
-    className += " rounded-full"
+    className += " rounded-full";
   } else {
-    className += " rounded-md"
+    className += " rounded-md";
   }
 
-  // Add navigation indicator if this button navigates to a screen
-  const hasNavigation = navigateTo && navigateTo !== ""
+  const hasNavigation = navigateTo && navigateTo !== "";
 
   return (
-    <div className={className} style={{ padding: `${padding}px` }}>
+    <div
+      className={className}
+      style={{
+        padding: `${padding}px`,
+        backgroundColor: variant === "primary" ? color : variant === "outline" ? "transparent" : undefined,
+        color: variant === "primary" ? textColor : variant === "outline" ? color : undefined,
+        borderColor: variant === "outline" ? color : undefined,
+      }}
+    >
       <div className="flex items-center">
         {text}
         {hasNavigation && (
@@ -93,11 +104,11 @@ function renderButton(properties: Record<string, any>, isDarkMode: boolean) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 function renderTextField(properties: Record<string, any>, isDarkMode: boolean) {
-  const { hint, label, hasIcon, icon, validation } = properties
+  const { hint, label, hasIcon, icon, validation } = properties;
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -105,7 +116,9 @@ function renderTextField(properties: Record<string, any>, isDarkMode: boolean) {
         <label className={`mb-1 text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>{label}</label>
       )}
       <div
-        className={`flex flex-1 items-center rounded-md border ${validation ? "border-red-500" : isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-300"}`}
+        className={`flex flex-1 items-center rounded-md border ${
+          validation ? "border-red-500" : isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-300"
+        }`}
       >
         {hasIcon && (
           <div className="pl-3 text-gray-500">
@@ -129,15 +142,15 @@ function renderTextField(properties: Record<string, any>, isDarkMode: boolean) {
       </div>
       {validation && <p className="mt-1 text-xs text-red-500">Please enter a valid value</p>}
     </div>
-  )
+  );
 }
 
 function renderCard(properties: Record<string, any>, isDarkMode: boolean) {
-  const { elevation, borderRadius, color, padding } = properties
+  const { title, subtitle, content, showImage, imageHeight, elevation, borderRadius, color, padding } = properties;
 
   return (
     <div
-      className="h-full w-full"
+      className="h-full w-full overflow-hidden"
       style={{
         backgroundColor: color,
         borderRadius: `${borderRadius}px`,
@@ -145,37 +158,110 @@ function renderCard(properties: Record<string, any>, isDarkMode: boolean) {
         boxShadow: `0 ${elevation}px ${elevation * 2}px rgba(0, 0, 0, 0.1)`,
       }}
     >
-      <div className={`h-8 w-3/4 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`} />
-      <div className={`mt-2 h-4 w-1/2 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`} />
-      <div className={`mt-4 h-20 w-full rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`} />
+      {showImage && (
+        <div
+          className={`w-full rounded mb-3 flex items-center justify-center ${
+            isDarkMode ? "bg-gray-700" : "bg-gray-200"
+          }`}
+          style={{ height: `${imageHeight}px` }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-8 w-8 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <h3 className={`text-lg font-bold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+          {title || "Card Title"}
+        </h3>
+
+        {subtitle && <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{subtitle}</p>}
+
+        <p className={`text-sm ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+          {content || "Card content goes here..."}
+        </p>
+      </div>
     </div>
-  )
+  );
 }
 
 function renderList(properties: Record<string, any>, isDarkMode: boolean) {
-  const { direction, scrollable, itemCount, itemHeight } = properties
+  const { direction, data, itemHeight } = properties;
 
-  const items = Array.from({ length: itemCount }, (_, i) => i)
+  let parsedData = [];
+  try {
+    parsedData = typeof data === "string" ? JSON.parse(data) : data || [];
+  } catch (e) {
+    parsedData = [
+      { title: "Item 1", subtitle: "Description 1", icon: "star" },
+      { title: "Item 2", subtitle: "Description 2", icon: "favorite" },
+    ];
+  }
+
+  const iconMap: Record<string, string> = {
+    star: "⭐",
+    favorite: "❤️",
+    home: "🏠",
+    settings: "⚙️",
+    person: "👤",
+    email: "📧",
+    phone: "📞",
+    location: "📍",
+  };
 
   return (
     <div className={`h-full w-full overflow-auto ${direction === "horizontal" ? "flex" : "flex flex-col"}`}>
-      {items.map((i) => (
+      {parsedData.map((item: any, i: number) => (
         <div
           key={i}
           className={`flex items-center ${
-            direction === "horizontal" ? "h-full w-40 flex-shrink-0" : "h-12 w-full flex-shrink-0"
-          } ${isDarkMode ? "bg-gray-800" : "bg-gray-200"} border-b border-${isDarkMode ? "gray-700" : "gray-100"} p-2`}
+            direction === "horizontal" ? "h-full w-48 flex-shrink-0 mr-2" : "h-16 w-full flex-shrink-0"
+          } ${isDarkMode ? "bg-gray-800" : "bg-white"} border border-${
+            isDarkMode ? "gray-700" : "gray-200"
+          } rounded-lg p-3 mb-2 shadow-sm`}
         >
-          <div className={`h-6 w-6 rounded-full ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
-          <div className={`ml-2 h-4 w-24 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
+          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-600 mr-3">
+            {iconMap[item.icon] || "⚪"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={`font-medium text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"} truncate`}>
+              {item.title || `Item ${i + 1}`}
+            </div>
+            <div className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"} truncate`}>
+              {item.subtitle || `Description ${i + 1}`}
+            </div>
+          </div>
+          {direction === "vertical" && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function renderIcon(properties: Record<string, any>) {
-  const { name, color, size } = properties
+  const { name, color, size } = properties;
 
   return (
     <div className="flex h-full w-full items-center justify-center" style={{ color }}>
@@ -193,11 +279,11 @@ function renderIcon(properties: Record<string, any>) {
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
       </svg>
     </div>
-  )
+  );
 }
 
 function renderContainer(properties: Record<string, any>, isDarkMode: boolean) {
-  const { color, padding, margin, borderRadius } = properties
+  const { color, padding, margin, borderRadius } = properties;
 
   return (
     <div
@@ -213,23 +299,23 @@ function renderContainer(properties: Record<string, any>, isDarkMode: boolean) {
         className={`h-full w-full rounded border ${isDarkMode ? "border-gray-700" : "border-gray-300"} border-dashed`}
       />
     </div>
-  )
+  );
 }
 
 function renderRow(properties: Record<string, any>, isDarkMode: boolean) {
-  const { mainAxisAlignment, crossAxisAlignment, padding } = properties
+  const { mainAxisAlignment, crossAxisAlignment, padding } = properties;
 
-  let justifyContent = "flex-start"
-  if (mainAxisAlignment === "center") justifyContent = "center"
-  if (mainAxisAlignment === "end") justifyContent = "flex-end"
-  if (mainAxisAlignment === "spaceBetween") justifyContent = "space-between"
-  if (mainAxisAlignment === "spaceAround") justifyContent = "space-around"
-  if (mainAxisAlignment === "spaceEvenly") justifyContent = "space-evenly"
+  let justifyContent = "flex-start";
+  if (mainAxisAlignment === "center") justifyContent = "center";
+  if (mainAxisAlignment === "end") justifyContent = "flex-end";
+  if (mainAxisAlignment === "spaceBetween") justifyContent = "space-between";
+  if (mainAxisAlignment === "spaceAround") justifyContent = "space-around";
+  if (mainAxisAlignment === "spaceEvenly") justifyContent = "space-evenly";
 
-  let alignItems = "flex-start"
-  if (crossAxisAlignment === "center") alignItems = "center"
-  if (crossAxisAlignment === "end") alignItems = "flex-end"
-  if (crossAxisAlignment === "stretch") alignItems = "stretch"
+  let alignItems = "flex-start";
+  if (crossAxisAlignment === "center") alignItems = "center";
+  if (crossAxisAlignment === "end") alignItems = "flex-end";
+  if (crossAxisAlignment === "stretch") alignItems = "stretch";
 
   return (
     <div
@@ -244,23 +330,23 @@ function renderRow(properties: Record<string, any>, isDarkMode: boolean) {
       <div className={`h-8 w-8 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
       <div className={`h-8 w-8 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
     </div>
-  )
+  );
 }
 
 function renderColumn(properties: Record<string, any>, isDarkMode: boolean) {
-  const { mainAxisAlignment, crossAxisAlignment, padding } = properties
+  const { mainAxisAlignment, crossAxisAlignment, padding } = properties;
 
-  let justifyContent = "flex-start"
-  if (mainAxisAlignment === "center") justifyContent = "center"
-  if (mainAxisAlignment === "end") justifyContent = "flex-end"
-  if (mainAxisAlignment === "spaceBetween") justifyContent = "space-between"
-  if (mainAxisAlignment === "spaceAround") justifyContent = "space-around"
-  if (mainAxisAlignment === "spaceEvenly") justifyContent = "space-evenly"
+  let justifyContent = "flex-start";
+  if (mainAxisAlignment === "center") justifyContent = "center";
+  if (mainAxisAlignment === "end") justifyContent = "flex-end";
+  if (mainAxisAlignment === "spaceBetween") justifyContent = "space-between";
+  if (mainAxisAlignment === "spaceAround") justifyContent = "space-around";
+  if (mainAxisAlignment === "spaceEvenly") justifyContent = "space-evenly";
 
-  let alignItems = "flex-start"
-  if (crossAxisAlignment === "center") alignItems = "center"
-  if (crossAxisAlignment === "end") alignItems = "flex-end"
-  if (crossAxisAlignment === "stretch") alignItems = "stretch"
+  let alignItems = "flex-start";
+  if (crossAxisAlignment === "center") alignItems = "center";
+  if (crossAxisAlignment === "end") alignItems = "flex-end";
+  if (crossAxisAlignment === "stretch") alignItems = "stretch";
 
   return (
     <div
@@ -275,39 +361,39 @@ function renderColumn(properties: Record<string, any>, isDarkMode: boolean) {
       <div className={`mt-2 h-8 w-24 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
       <div className={`mt-2 h-8 w-24 rounded ${isDarkMode ? "bg-gray-700" : "bg-gray-300"}`} />
     </div>
-  )
+  );
 }
 
 function renderStack(properties: Record<string, any>, isDarkMode: boolean) {
-  const { alignment, padding } = properties
+  const { alignment, padding } = properties;
 
-  let alignItems = "flex-start"
-  let justifyContent = "flex-start"
+  let alignItems = "flex-start";
+  let justifyContent = "flex-start";
 
   if (alignment === "center") {
-    alignItems = "center"
-    justifyContent = "center"
+    alignItems = "center";
+    justifyContent = "center";
   } else if (alignment === "topCenter") {
-    alignItems = "center"
-    justifyContent = "flex-start"
+    alignItems = "center";
+    justifyContent = "flex-start";
   } else if (alignment === "topRight") {
-    alignItems = "flex-end"
-    justifyContent = "flex-start"
+    alignItems = "flex-end";
+    justifyContent = "flex-start";
   } else if (alignment === "centerLeft") {
-    alignItems = "flex-start"
-    justifyContent = "center"
+    alignItems = "flex-start";
+    justifyContent = "center";
   } else if (alignment === "centerRight") {
-    alignItems = "flex-end"
-    justifyContent = "center"
+    alignItems = "flex-end";
+    justifyContent = "center";
   } else if (alignment === "bottomLeft") {
-    alignItems = "flex-start"
-    justifyContent = "flex-end"
+    alignItems = "flex-start";
+    justifyContent = "flex-end";
   } else if (alignment === "bottomCenter") {
-    alignItems = "center"
-    justifyContent = "flex-end"
+    alignItems = "center";
+    justifyContent = "flex-end";
   } else if (alignment === "bottomRight") {
-    alignItems = "flex-end"
-    justifyContent = "flex-end"
+    alignItems = "flex-end";
+    justifyContent = "flex-end";
   }
 
   return (
@@ -328,14 +414,14 @@ function renderStack(properties: Record<string, any>, isDarkMode: boolean) {
             alignment === "center"
               ? "translate(-50%, -50%)"
               : alignment === "topCenter"
-                ? "translateX(-50%)"
-                : alignment === "centerLeft"
-                  ? "translateY(-50%)"
-                  : alignment === "centerRight"
-                    ? "translateY(-50%)"
-                    : alignment === "bottomCenter"
-                      ? "translateX(-50%)"
-                      : "none",
+              ? "translateX(-50%)"
+              : alignment === "centerLeft"
+              ? "translateY(-50%)"
+              : alignment === "centerRight"
+              ? "translateY(-50%)"
+              : alignment === "bottomCenter"
+              ? "translateX(-50%)"
+              : "none",
         }}
       />
       <div
@@ -349,22 +435,22 @@ function renderStack(properties: Record<string, any>, isDarkMode: boolean) {
             alignment === "center"
               ? "translate(-50%, -50%)"
               : alignment === "topCenter"
-                ? "translateX(-50%)"
-                : alignment === "centerLeft"
-                  ? "translateY(-50%)"
-                  : alignment === "centerRight"
-                    ? "translateY(-50%)"
-                    : alignment === "bottomCenter"
-                      ? "translateX(-50%)"
-                      : "none",
+              ? "translateX(-50%)"
+              : alignment === "centerLeft"
+              ? "translateY(-50%)"
+              : alignment === "centerRight"
+              ? "translateY(-50%)"
+              : alignment === "bottomCenter"
+              ? "translateX(-50%)"
+              : "none",
         }}
       />
     </div>
-  )
+  );
 }
 
 function renderSwitch(properties: Record<string, any>) {
-  const { value, activeColor, inactiveColor } = properties
+  const { value, activeColor, inactiveColor } = properties;
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -379,11 +465,11 @@ function renderSwitch(properties: Record<string, any>) {
         />
       </div>
     </div>
-  )
+  );
 }
 
 function renderCheckbox(properties: Record<string, any>) {
-  const { value, activeColor } = properties
+  const { value, activeColor } = properties;
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -410,11 +496,11 @@ function renderCheckbox(properties: Record<string, any>) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 function renderRadio(properties: Record<string, any>) {
-  const { value, activeColor } = properties
+  const { value, activeColor } = properties;
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -427,11 +513,11 @@ function renderRadio(properties: Record<string, any>) {
         {value && <div className="h-3 w-3 rounded-full" style={{ backgroundColor: activeColor }} />}
       </div>
     </div>
-  )
+  );
 }
 
 function renderChatInput(properties: Record<string, any>, isDarkMode: boolean) {
-  const { placeholder, buttonText, buttonColor } = properties
+  const { placeholder, buttonText, buttonColor } = properties;
 
   return (
     <div className="flex h-full w-full items-center space-x-2 rounded-lg border p-2">
@@ -446,14 +532,14 @@ function renderChatInput(properties: Record<string, any>, isDarkMode: boolean) {
         {buttonText || "Send"}
       </button>
     </div>
-  )
+  );
 }
 
 function renderChatMessage(properties: Record<string, any>, isDarkMode: boolean) {
-  const { text, isUser, avatar, timestamp } = properties
+  const { text, isUser, avatar, timestamp } = properties;
 
-  const messageText = text || "This is a sample message"
-  const messageTime = "12:34 PM"
+  const messageText = text || "This is a sample message";
+  const messageTime = "12:34 PM";
 
   return (
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
@@ -465,8 +551,8 @@ function renderChatMessage(properties: Record<string, any>, isDarkMode: boolean)
               isUser
                 ? "rounded-tr-none bg-blue-500 text-white"
                 : isDarkMode
-                  ? "rounded-tl-none bg-gray-700 text-white"
-                  : "rounded-tl-none bg-gray-200 text-gray-800"
+                ? "rounded-tl-none bg-gray-700 text-white"
+                : "rounded-tl-none bg-gray-200 text-gray-800"
             }`}
           >
             {messageText}
@@ -476,7 +562,7 @@ function renderChatMessage(properties: Record<string, any>, isDarkMode: boolean)
         {isUser && avatar && <div className="ml-2 h-8 w-8 flex-shrink-0 rounded-full bg-blue-300"></div>}
       </div>
     </div>
-  )
+  );
 }
 
 function renderDropdown(properties: Record<string, any>, isDarkMode: boolean) {
@@ -489,18 +575,18 @@ function renderDropdown(properties: Record<string, any>, isDarkMode: boolean) {
     disabled,
     borderColor = "#d1d5db",
     backgroundColor = isDarkMode ? "#1f2937" : "#ffffff",
-  } = properties
+  } = properties;
 
   const parsedOptions =
     typeof options === "string"
       ? JSON.parse(options)
       : Array.isArray(options)
-        ? options
-        : [
-            { label: "Option 1", value: "option1" },
-            { label: "Option 2", value: "option2" },
-            { label: "Option 3", value: "option3" },
-          ]
+      ? options
+      : [
+          { label: "Option 1", value: "option1" },
+          { label: "Option 2", value: "option2" },
+          { label: "Option 3", value: "option3" },
+        ];
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -548,7 +634,7 @@ function renderDropdown(properties: Record<string, any>, isDarkMode: boolean) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function renderInputWithLabel(properties: Record<string, any>, isDarkMode: boolean) {
@@ -561,7 +647,7 @@ function renderInputWithLabel(properties: Record<string, any>, isDarkMode: boole
     disabled,
     borderColor = "#d1d5db",
     labelColor = isDarkMode ? "#d1d5db" : "#374151",
-  } = properties
+  } = properties;
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -581,7 +667,7 @@ function renderInputWithLabel(properties: Record<string, any>, isDarkMode: boole
         readOnly
       />
     </div>
-  )
+  );
 }
 
 function renderSwitchWithLabel(properties: Record<string, any>, isDarkMode: boolean) {
@@ -593,7 +679,7 @@ function renderSwitchWithLabel(properties: Record<string, any>, isDarkMode: bool
     labelPosition = "right",
     disabled,
     labelColor = isDarkMode ? "#d1d5db" : "#374151",
-  } = properties
+  } = properties;
 
   const switchElement = (
     <div
@@ -606,7 +692,7 @@ function renderSwitchWithLabel(properties: Record<string, any>, isDarkMode: bool
         style={{ left: value ? "calc(100% - 20px - 2px)" : "2px" }}
       />
     </div>
-  )
+  );
 
   return (
     <div className="flex h-full w-full items-center">
@@ -624,7 +710,7 @@ function renderSwitchWithLabel(properties: Record<string, any>, isDarkMode: bool
         </label>
       )}
     </div>
-  )
+  );
 }
 
 function renderRadioWithLabel(properties: Record<string, any>, isDarkMode: boolean) {
@@ -635,7 +721,7 @@ function renderRadioWithLabel(properties: Record<string, any>, isDarkMode: boole
     labelPosition = "right",
     disabled,
     labelColor = isDarkMode ? "#d1d5db" : "#374151",
-  } = properties
+  } = properties;
 
   const radioElement = (
     <div
@@ -646,7 +732,7 @@ function renderRadioWithLabel(properties: Record<string, any>, isDarkMode: boole
     >
       {value && <div className="h-3 w-3 rounded-full" style={{ backgroundColor: activeColor }} />}
     </div>
-  )
+  );
 
   return (
     <div className="flex h-full w-full items-center">
@@ -664,7 +750,7 @@ function renderRadioWithLabel(properties: Record<string, any>, isDarkMode: boole
         </label>
       )}
     </div>
-  )
+  );
 }
 
 function renderCheckboxWithLabel(properties: Record<string, any>, isDarkMode: boolean) {
@@ -675,7 +761,7 @@ function renderCheckboxWithLabel(properties: Record<string, any>, isDarkMode: bo
     labelPosition = "right",
     disabled,
     labelColor = isDarkMode ? "#d1d5db" : "#374151",
-  } = properties
+  } = properties;
 
   const checkboxElement = (
     <div
@@ -700,7 +786,7 @@ function renderCheckboxWithLabel(properties: Record<string, any>, isDarkMode: bo
         </svg>
       )}
     </div>
-  )
+  );
 
   return (
     <div className="flex h-full w-full items-center">
@@ -718,14 +804,15 @@ function renderCheckboxWithLabel(properties: Record<string, any>, isDarkMode: bo
         </label>
       )}
     </div>
-  )
+  );
 }
 
+// Actualizar renderDynamicTable para mostrar datos reales:
 function renderDynamicTable(properties: Record<string, any>, isDarkMode: boolean) {
   const {
     title,
     columns = [],
-    rowCount = 3,
+    data = [],
     showHeader = true,
     showBorder = true,
     striped = true,
@@ -733,29 +820,35 @@ function renderDynamicTable(properties: Record<string, any>, isDarkMode: boolean
     borderColor = "#e5e7eb",
     evenRowColor = isDarkMode ? "#1f2937" : "#ffffff",
     oddRowColor = isDarkMode ? "#111827" : "#f9fafb",
-  } = properties
+  } = properties;
 
-  // Parse columns if it's a string
-  const parsedColumns: TableColumn[] =
-    typeof columns === "string"
-      ? JSON.parse(columns)
-      : Array.isArray(columns)
-        ? columns
-        : [
-            { id: "col1", title: "Column 1", width: 100 },
-            { id: "col2", title: "Column 2", width: 100 },
-            { id: "col3", title: "Column 3", width: 100 },
-          ]
+  let parsedColumns: TableColumn[] = [];
+  let parsedData: any[] = [];
 
-  // Generate rows
-  const rows = Array.from({ length: rowCount }, (_, rowIndex) => {
-    return parsedColumns.map((col, colIndex) => `Cell ${rowIndex + 1}-${colIndex + 1}`)
-  })
+  try {
+    parsedColumns = typeof columns === "string" ? JSON.parse(columns) : columns;
+    parsedData = typeof data === "string" ? JSON.parse(data) : data;
+  } catch (e) {
+    parsedColumns = [
+      { id: "name", title: "Name", width: 120 },
+      { id: "email", title: "Email", width: 180 },
+    ];
+    parsedData = [
+      { name: "John Doe", email: "john@example.com" },
+      { name: "Jane Smith", email: "jane@example.com" },
+    ];
+  }
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       {title && (
-        <div className={`px-3 py-2 font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>{title}</div>
+        <div
+          className={`px-3 py-2 font-medium border-b ${
+            isDarkMode ? "text-gray-300 border-gray-700" : "text-gray-700 border-gray-200"
+          }`}
+        >
+          {title}
+        </div>
       )}
 
       <div className="flex-1 overflow-auto">
@@ -785,7 +878,7 @@ function renderDynamicTable(properties: Record<string, any>, isDarkMode: boolean
           )}
 
           <tbody>
-            {rows.map((row, rowIndex) => (
+            {parsedData.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
                 style={{
@@ -794,19 +887,19 @@ function renderDynamicTable(properties: Record<string, any>, isDarkMode: boolean
                       ? evenRowColor
                       : oddRowColor
                     : isDarkMode
-                      ? "#1f2937"
-                      : "#ffffff",
+                    ? "#1f2937"
+                    : "#ffffff",
                 }}
               >
-                {row.map((cell, cellIndex) => (
+                {parsedColumns.map((column, cellIndex) => (
                   <td
                     key={cellIndex}
-                    className={`px-3 py-2 text-sm ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    } ${showBorder ? "border" : ""}`}
+                    className={`px-3 py-2 text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"} ${
+                      showBorder ? "border" : ""
+                    }`}
                     style={{ borderColor: borderColor }}
                   >
-                    {cell}
+                    {row[column.id] || "-"}
                   </td>
                 ))}
               </tr>
@@ -815,5 +908,18 @@ function renderDynamicTable(properties: Record<string, any>, isDarkMode: boolean
         </table>
       </div>
     </div>
-  )
+  );
+}
+
+function getContrastingTextColor(hexColor: string): string {
+  if (!hexColor || !hexColor.startsWith("#")) {
+    return "#FFFFFF";
+  }
+
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? "#000000" : "#FFFFFF";
 }

@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import type { DesignElement, Screen, TableColumn } from "@/lib/types"
-import { getPropertiesConfig } from "@/lib/properties-config"
+import { useState } from "react";
+import type { DesignElement, Screen, TableColumn } from "@/lib/types";
+import { getPropertiesConfig } from "@/lib/properties-config";
 
 interface PropertiesPanelProps {
-  selectedElement: DesignElement | null
-  onUpdateElement: (id: string, updates: Partial<DesignElement>) => void
-  onRemoveElement: (id: string) => void
-  screens?: Screen[]
+  selectedElement: DesignElement | null;
+  onUpdateElement: (id: string, updates: Partial<DesignElement>) => void;
+  onRemoveElement: (id: string) => void;
+  screens?: Screen[];
 }
 
 export default function PropertiesPanel({
@@ -17,11 +17,11 @@ export default function PropertiesPanel({
   onRemoveElement,
   screens = [],
 }: PropertiesPanelProps) {
-  const [activeTab, setActiveTab] = useState("properties")
-  const [newOptionLabel, setNewOptionLabel] = useState("")
-  const [newOptionValue, setNewOptionValue] = useState("")
-  const [newColumnTitle, setNewColumnTitle] = useState("")
-  const [newColumnWidth, setNewColumnWidth] = useState(100)
+  const [activeTab, setActiveTab] = useState("properties");
+  const [newOptionLabel, setNewOptionLabel] = useState("");
+  const [newOptionValue, setNewOptionValue] = useState("");
+  const [newColumnTitle, setNewColumnTitle] = useState("");
+  const [newColumnWidth, setNewColumnWidth] = useState(100);
 
   if (!selectedElement) {
     return (
@@ -32,7 +32,7 @@ export default function PropertiesPanel({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   const handlePropertyChange = (property: string, value: any) => {
@@ -41,76 +41,76 @@ export default function PropertiesPanel({
         ...selectedElement.properties,
         [property]: value,
       },
-    })
-  }
+    });
+  };
 
   const handlePositionChange = (property: string, value: number) => {
     onUpdateElement(selectedElement.id, {
       [property]: value,
-    })
-  }
+    });
+  };
 
-  const propertiesConfig = getPropertiesConfig(selectedElement.type)
+  const propertiesConfig = getPropertiesConfig(selectedElement.type);
 
   // Handle dropdown options
   const handleAddOption = () => {
     if (newOptionLabel.trim() && newOptionValue.trim()) {
-      const currentOptions = selectedElement.properties.options || []
-      let parsedOptions = []
+      const currentOptions = selectedElement.properties.options || [];
+      let parsedOptions = [];
 
       try {
         parsedOptions =
           typeof currentOptions === "string"
             ? JSON.parse(currentOptions)
             : Array.isArray(currentOptions)
-              ? currentOptions
-              : []
+            ? currentOptions
+            : [];
       } catch (e) {
-        parsedOptions = []
+        parsedOptions = [];
       }
 
-      const newOptions = [...parsedOptions, { label: newOptionLabel, value: newOptionValue }]
+      const newOptions = [...parsedOptions, { label: newOptionLabel, value: newOptionValue }];
 
-      handlePropertyChange("options", JSON.stringify(newOptions))
-      setNewOptionLabel("")
-      setNewOptionValue("")
+      handlePropertyChange("options", JSON.stringify(newOptions));
+      setNewOptionLabel("");
+      setNewOptionValue("");
     }
-  }
+  };
 
   const handleRemoveOption = (index: number) => {
-    const currentOptions = selectedElement.properties.options || []
-    let parsedOptions = []
+    const currentOptions = selectedElement.properties.options || [];
+    let parsedOptions = [];
 
     try {
       parsedOptions =
         typeof currentOptions === "string"
           ? JSON.parse(currentOptions)
           : Array.isArray(currentOptions)
-            ? currentOptions
-            : []
+          ? currentOptions
+          : [];
     } catch (e) {
-      parsedOptions = []
+      parsedOptions = [];
     }
 
-    const newOptions = parsedOptions.filter((_: any, i: number) => i !== index)
-    handlePropertyChange("options", JSON.stringify(newOptions))
-  }
+    const newOptions = parsedOptions.filter((_: any, i: number) => i !== index);
+    handlePropertyChange("options", JSON.stringify(newOptions));
+  };
 
   // Handle table columns
   const handleAddColumn = () => {
     if (newColumnTitle.trim()) {
-      const currentColumns = selectedElement.properties.columns || []
-      let parsedColumns = []
+      const currentColumns = selectedElement.properties.columns || [];
+      let parsedColumns = [];
 
       try {
         parsedColumns =
           typeof currentColumns === "string"
             ? JSON.parse(currentColumns)
             : Array.isArray(currentColumns)
-              ? currentColumns
-              : []
+            ? currentColumns
+            : [];
       } catch (e) {
-        parsedColumns = []
+        parsedColumns = [];
       }
 
       const newColumns = [
@@ -120,47 +120,47 @@ export default function PropertiesPanel({
           title: newColumnTitle,
           width: newColumnWidth,
         },
-      ]
+      ];
 
-      handlePropertyChange("columns", JSON.stringify(newColumns))
-      setNewColumnTitle("")
-      setNewColumnWidth(100)
+      handlePropertyChange("columns", JSON.stringify(newColumns));
+      setNewColumnTitle("");
+      setNewColumnWidth(100);
     }
-  }
+  };
 
   const handleRemoveColumn = (index: number) => {
-    const currentColumns = selectedElement.properties.columns || []
-    let parsedColumns = []
+    const currentColumns = selectedElement.properties.columns || [];
+    let parsedColumns = [];
 
     try {
       parsedColumns =
         typeof currentColumns === "string"
           ? JSON.parse(currentColumns)
           : Array.isArray(currentColumns)
-            ? currentColumns
-            : []
+          ? currentColumns
+          : [];
     } catch (e) {
-      parsedColumns = []
+      parsedColumns = [];
     }
 
-    const newColumns = parsedColumns.filter((_: any, i: number) => i !== index)
-    handlePropertyChange("columns", JSON.stringify(newColumns))
-  }
+    const newColumns = parsedColumns.filter((_: any, i: number) => i !== index);
+    handlePropertyChange("columns", JSON.stringify(newColumns));
+  };
 
   // Render dropdown options editor
   const renderOptionsEditor = () => {
-    const currentOptions = selectedElement.properties.options || []
-    let parsedOptions = []
+    const currentOptions = selectedElement.properties.options || [];
+    let parsedOptions = [];
 
     try {
       parsedOptions =
         typeof currentOptions === "string"
           ? JSON.parse(currentOptions)
           : Array.isArray(currentOptions)
-            ? currentOptions
-            : []
+          ? currentOptions
+          : [];
     } catch (e) {
-      parsedOptions = []
+      parsedOptions = [];
     }
 
     return (
@@ -220,23 +220,23 @@ export default function PropertiesPanel({
           </button>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   // Render table columns editor
   const renderColumnsEditor = () => {
-    const currentColumns = selectedElement.properties.columns || []
-    let parsedColumns = []
+    const currentColumns = selectedElement.properties.columns || [];
+    let parsedColumns = [];
 
     try {
       parsedColumns =
         typeof currentColumns === "string"
           ? JSON.parse(currentColumns)
           : Array.isArray(currentColumns)
-            ? currentColumns
-            : []
+          ? currentColumns
+          : [];
     } catch (e) {
-      parsedColumns = []
+      parsedColumns = [];
     }
 
     return (
@@ -296,8 +296,8 @@ export default function PropertiesPanel({
           </button>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="w-72 flex-shrink-0 overflow-y-auto border-l border-gray-200 bg-white">
@@ -485,5 +485,5 @@ export default function PropertiesPanel({
         )}
       </div>
     </div>
-  )
+  );
 }
