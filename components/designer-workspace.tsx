@@ -15,6 +15,7 @@ import { generateFlutterCode } from "@/lib/code-generator";
 import { getDefaultHeight, getDefaultProperties, getDefaultWidth } from "@/lib/properties";
 import { RotateCcw, RotateCw, Trash2, Eye, Code, MessageSquare, Moon, Sun } from "lucide-react";
 import { DownloadZipButton } from "./export-flutter";
+import IaImage from "./ia-image";
 
 export default function DesignerWorkspace() {
   // Screens state
@@ -661,6 +662,8 @@ export default function DesignerWorkspace() {
           onDeleteScreen={deleteScreen}
           onSelectScreen={setCurrentScreenId}
         />
+
+<IaImage />
 
         <div className="flex flex-1 overflow-hidden">
           <ComponentsSidebar onAddElement={addElement} />
