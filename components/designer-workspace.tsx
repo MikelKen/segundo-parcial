@@ -16,6 +16,7 @@ import { getDefaultHeight, getDefaultProperties, getDefaultWidth } from "@/lib/p
 import { RotateCcw, RotateCw, Trash2, Eye, Code, MessageSquare, Moon, Sun } from "lucide-react";
 import { DownloadZipButton } from "./export-flutter";
 import IaImage from "./ia-image";
+import IaExample from "./ia-example";
 
 export default function DesignerWorkspace() {
   // Screens state
@@ -459,6 +460,49 @@ export default function DesignerWorkspace() {
     setSelectedElement(null);
   }, []);
 
+  // Screen management functions
+  const addScreenIA = useCallback((name: string, elements: Omit<DesignElement, 'id'>[] = []) => {
+    const newScreenId = `screen-${Date.now()}`;
+    console.log("🆕 Creando nueva pantalla IA:", newScreenId, "Nombre:", name, "Elementos:", elements.length);
+
+    // Crear la nueva pantalla con los elementos
+    const newScreen: Screen = {
+      id: newScreenId,
+      name,
+      elements: elements.map(element => ({
+        ...element,
+        // Asegurar que los IDs sean únicos usando el screenId
+        id: `element-${newScreenId}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        // Procesar elementos hijos recursivamente
+        children: element.children?.map(child => ({
+          ...child,
+          id: `child-${newScreenId}-${child.id || Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+        })) || []
+      }))
+    };
+
+    // Agregar la nueva pantalla
+    setScreens(prevScreens => [...prevScreens, newScreen]);
+
+    // Inicializar el historial para la nueva pantalla
+    setHistory(prevHistory => ({
+      ...prevHistory,
+      [newScreenId]: [newScreen.elements],
+    }));
+
+    // Inicializar el índice del historial
+    setHistoryIndex(prevIndices => ({
+      ...prevIndices,
+      [newScreenId]: 0,
+    }));
+
+    // Cambiar a la nueva pantalla
+    setCurrentScreenId(newScreenId);
+    setSelectedElement(null);
+
+    return newScreenId;
+  }, []);
+
   const renameScreen = useCallback((id: string, name: string) => {
     setScreens((prevScreens) => prevScreens.map((screen) => (screen.id === id ? { ...screen, name } : screen)));
   }, []);
@@ -616,9 +660,8 @@ export default function DesignerWorkspace() {
           <div className="flex items-center space-x-2">
             <button
               onClick={togglePreview}
-              className={`rounded px-3 py-1 text-sm ${
-                showPreview ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`rounded px-3 py-1 text-sm ${showPreview ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               <Eye size={16} className="inline mr-1" />
               Preview
@@ -626,9 +669,8 @@ export default function DesignerWorkspace() {
 
             <button
               onClick={toggleExport}
-              className={`rounded px-3 py-1 text-sm ${
-                showExport ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`rounded px-3 py-1 text-sm ${showExport ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               <Code size={16} className="inline mr-1" />
               Export
@@ -636,9 +678,8 @@ export default function DesignerWorkspace() {
 
             <button
               onClick={toggleChat}
-              className={`rounded px-3 py-1 text-sm ${
-                showChat ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`rounded px-3 py-1 text-sm ${showChat ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               <MessageSquare size={16} className="inline mr-1" />
               Chat
@@ -663,7 +704,8 @@ export default function DesignerWorkspace() {
           onSelectScreen={setCurrentScreenId}
         />
 
-<IaImage />
+        {/* <IaImage /> */}
+        <IaExample addScreenIA={addScreenIA} />
 
         <div className="flex flex-1 overflow-hidden">
           <ComponentsSidebar onAddElement={addElement} />
